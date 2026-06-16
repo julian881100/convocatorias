@@ -1,0 +1,941 @@
+sources:
+  # ── Batch 1: 6 Colombian sources ──────────────────────────────────
+
+  - name: "Minciencias - Convocatorias"
+    url: "https://minciencias.gov.co/convocatorias/todas"
+    country: "Colombia"
+    fetcher: "stealthy"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "table.views-table tbody tr"
+      fields:
+        title: "td.views-field-title a::text"
+        url: "td.views-field-title a::attr(href)"
+        description: "td.views-field-body::text"
+        opening_date: "td.views-field-field-fecha-de-apertura span.date-display-single::text"
+        funding_amount: "td.views-field-field-cuantia::text"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+
+  - name: "iNNpulsa Colombia - Convocatorias"
+    url: "https://www.innpulsacolombia.com/convocatorias"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.view-convocatorias article"
+      fields:
+        title: "h2 a::text"
+        url: "h2 a::attr(href)"
+        description: "div.field-content p::text"
+        opening_date: "span.fecha-publicacion::text"
+        closing_date: "time::attr(datetime)"
+        official_body: "div.field-name-entidad-convocante::text"
+        funding_amount: "span.monto-financiacion::text"
+    robots_txt_obey: true
+    category_default: "Emprendimiento"
+    custom_parser: false
+
+  - name: "MinTIC - Convocatorias"
+    url: "https://www.mintic.gov.co/portal/inicio/Convocatorias/"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.resultados-lista .item"
+      fields:
+        title: "h3 a::text"
+        url: "h3 a::attr(href)"
+        description: "p.descripcion::text"
+        closing_date: "span.fecha::text"
+    robots_txt_obey: true
+    category_default: "Tecnología"
+    custom_parser: false
+
+  - name: "SENA - Convocatorias"
+    url: "https://www.sena.edu.co/es-co/trabajo/Paginas/convocatorias.aspx"
+    country: "Colombia"
+    fetcher: "dynamic"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.convocatorias-lista .item-convocatoria"
+      fields:
+        title: "h4 a::text"
+        url: "h4 a::attr(href)"
+        description: "p::text"
+        closing_date: "span.fecha-cierre::text"
+    robots_txt_obey: true
+    category_default: "Formación"
+    custom_parser: false
+
+  - name: "Fondo Emprender"
+    url: "https://www.fondoemprender.com/"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.convocatorias div.convocatoria-item"
+      fields:
+        title: "h3.titulo::text"
+        url: "a.enlace::attr(href)"
+        description: "p.descripcion::text"
+        closing_date: "span.fecha::text"
+    robots_txt_obey: true
+    category_default: "Emprendimiento"
+    custom_parser: false
+
+  - name: "Colombia Productiva - Convocatorias"
+    url: "https://www.colombiaproductiva.com/convocatorias"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.lista-convocatorias article"
+      fields:
+        title: "h2.titulo-convocatoria::text"
+        url: "a::attr(href)"
+        description: "p.descripcion::text"
+        closing_date: "time.fecha::text"
+    robots_txt_obey: true
+    category_default: "Productividad"
+    custom_parser: false
+
+  # ── Batch 2: 13 Additional Colombian sources ─────────────────────────
+  #
+  # NOTE: CSS selectors below are ESTIMATED based on common patterns for
+  # Colombian government and institutional sites (Drupal, WordPress, custom
+  # CMS). They will likely need tuning after the first live crawl.  Mark
+  # any source whose selectors fail as custom_parser: true so extraction
+  # can be delegated to an adapter function in Phase 4.
+
+  - name: "Bancóldex - Convocatorias"
+    url: "https://www.bancoldex.com/convocatorias-0"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.view-content div.views-row"
+      fields:
+        title: "h2.node-title a::text"
+        url: "h2.node-title a::attr(href)"
+        description: "div.field-content div.body-text p::text"
+        closing_date: "span.date-display-single::text"
+        official_body: "span.field-name-entidad::text"
+    robots_txt_obey: true
+    category_default: "Desarrollo empresarial"
+    custom_parser: false
+    # Note: Bancóldex uses Drupal; selectors mimic the Minciencias pattern
+    # but their node structure may differ. Tune container if needed.
+
+  - name: "Ruta N - Oportunidades"
+    url: "https://www.rutanmedellin.org/oportunidades"
+    country: "Colombia"
+    fetcher: "dynamic"
+    pagination:
+      type: "infinite_scroll"
+      max_pages: 10
+    selectors:
+      container: "div.oportunidades-list div.item-oportunidad"
+      fields:
+        title: "h3.titulo a::text"
+        url: "h3.titulo a::attr(href)"
+        description: "div.descripcion p::text"
+        closing_date: "span.fecha-cierre::text"
+        opening_date: "span.fecha-apertura::text"
+    robots_txt_obey: true
+    category_default: "Innovación"
+    custom_parser: false
+    # Note: Ruta N loads content dynamically (JS-rendered cards).
+    # Selectors estimated from their public-facing DOM patterns.
+
+  - name: "Cámara de Comercio de Bogotá - Convocatorias"
+    url: "https://www.ccb.org.co/convocatorias"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.lista-convocatorias div.convocatoria-item"
+      fields:
+        title: "h3.titulo a::text"
+        url: "h3.titulo a::attr(href)"
+        description: "div.descripcion p::text"
+        closing_date: "span.fecha-limite::text"
+        opening_date: "span.fecha-apertura::text"
+    robots_txt_obey: true
+    category_default: "Desarrollo empresarial"
+    custom_parser: false
+    # Note: CCB likely uses a Drupal-based listing; selectors approximate
+    # their card-grid pattern.
+
+  - name: "Connect Bogotá Región - Convocatorias"
+    url: "https://connectbogota.org/convocatorias/"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.content-area div.convocatoria-card"
+      fields:
+        title: "h2 a::text"
+        url: "h2 a::attr(href)"
+        description: "div.excerpt p::text"
+        closing_date: "span.date-display-single::text"
+    robots_txt_obey: true
+    category_default: "Desarrollo regional"
+    custom_parser: false
+    # Note: Connect Bogotá runs on a Drupal site; similar view-row pattern.
+
+  - name: "ProColombia - Convocatorias"
+    url: "https://procolombia.co/convocatorias"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.views-row"
+      fields:
+        title: "h3 a::text"
+        url: "h3 a::attr(href)"
+        description: "div.field-content p::text"
+        closing_date: "time.fecha-limite::attr(datetime)"
+    robots_txt_obey: true
+    category_default: "Comercio exterior"
+    custom_parser: false
+    # Note: ProColombia uses Drupal views; selectors follow standard
+    # Drupal 9 pattern.
+
+  - name: "ICETEX - Convocatorias"
+    url: "https://portal.icetex.gov.co/Portal/Home/el-icetex/convocatorias"
+    country: "Colombia"
+    fetcher: "dynamic"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.convocatorias-lista div.convocatoria-item"
+      fields:
+        title: "h3.convocatoria-titulo a::text"
+        url: "h3.convocatoria-titulo a::attr(href)"
+        description: "p.descripcion::text"
+        closing_date: "span.fecha-cierre::text"
+        opening_date: "span.fecha-apertura::text"
+        funding_amount: "span.valor-financiacion::text"
+    robots_txt_obey: true
+    category_default: "Educación"
+    custom_parser: false
+    # Note: ICETEX's portal is built with Angular — content may be loaded
+    # via API. The dynamic fetcher with JS rendering should resolve it.
+    # If selectors fail, set custom_parser: true for Phase 4.
+
+  - name: "Fulbright Colombia - Convocatorias"
+    url: "https://www.fulbright.edu.co/convocatorias/"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "article.post, div.convocatoria-item"
+      fields:
+        title: "h2.entry-title a::text, h3.titulo a::text"
+        url: "h2.entry-title a::attr(href), h3.titulo a::attr(href)"
+        description: "div.entry-content p::text, div.descripcion p::text"
+        closing_date: "span.fecha-limite::text, time.fecha::text"
+    robots_txt_obey: true
+    category_default: "Becas"
+    custom_parser: false
+    # Note: Fulbright uses WordPress with multiple theme variants; comma-
+    # separated selectors provide fallback within each extraction call.
+
+  - name: "Universidad Nacional de Colombia - Convocatorias"
+    url: "https://www.unal.edu.co/convocatorias/"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.noticias-lista div.noticia-item, div.views-row"
+      fields:
+        title: "h3.titulo a::text"
+        url: "h3.titulo a::attr(href)"
+        description: "div.resumen p::text"
+        closing_date: "span.fecha::text"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+    # Note: UNAL uses AgenciaMedia CMS; listing patterns vary by faculty.
+    # This targets the general institutional convocatorias page.
+
+  - name: "Universidad de Antioquia - Convocatorias"
+    url: "https://www.udea.edu.co/portal/convocatorias"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.view-content div.views-row"
+      fields:
+        title: "h2 a::text"
+        url: "h2 a::attr(href)"
+        description: "div.field-content p::text"
+        closing_date: "span.date-display-single::text"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+    # Note: UdeA runs Drupal 9; selectors match standard Drupal view rows.
+
+  - name: "Universidad de los Andes - Convocatorias"
+    url: "https://uniandes.edu.co/universidad/convocatorias"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.lista-contenidos div.item-contenido"
+      fields:
+        title: "h3.titulo a::text"
+        url: "h3.titulo a::attr(href)"
+        description: "div.descripcion p::text"
+        closing_date: "span.fecha-cierre::text"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+    # Note: Uniandes uses a custom CMS; card-based listing with title,
+    # description, and date per item.
+
+  - name: "Gobernación de Antioquia - Convocatorias"
+    url: "https://www.antioquia.gov.co/convocatorias"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.views-row, div.contenido-lista article"
+      fields:
+        title: "h2 a::text"
+        url: "h2 a::attr(href)"
+        description: "div.field-content p::text"
+        closing_date: "span.date-display-single::text, time.entry-date::attr(datetime)"
+    robots_txt_obey: true
+    category_default: "Desarrollo regional"
+    custom_parser: false
+    # Note: Gobernación de Antioquia site uses Drupal/WordPress hybrid;
+    # selectors cover both patterns.
+
+  - name: "Alcaldía de Medellín - Convocatorias"
+    url: "https://www.medellin.gov.co/convocatorias"
+    country: "Colombia"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.resultados-busqueda div.resultado-item"
+      fields:
+        title: "h3 a::text"
+        url: "h3 a::attr(href)"
+        description: "p.descripcion::text"
+        closing_date: "span.fecha::text"
+    robots_txt_obey: true
+    category_default: "Gestión pública"
+    custom_parser: false
+    # Note: Medellin.gov.co uses a custom portal. This is estimated from
+    # their search-results page pattern.
+
+  # NOTE: Regalías CTeI - Minciencias (/regalias) returns 404.
+  # SGR/Regalías convocatorias ARE included in the main Minciencias listing
+  # at /convocatorias/todas. If a dedicated filter page is found later,
+  # uncomment and update:
+  # - name: "Regalías CTeI - Minciencias"
+  #   url: "<working-filter-url>"
+  #   country: "Colombia"
+  #   fetcher: "http"
+  #   pagination:
+  #     type: "query_param"
+  #     param: "page"
+  #     start: 0
+  #   selectors:
+  #     container: "table.views-table tbody tr"
+  #     fields:
+  #       title: "td.views-field-title a::text"
+  #       url: "td.views-field-title a::attr(href)"
+  #       description: "td.views-field-body::text"
+  #       opening_date: "td.views-field-field-fecha-de-apertura span.date-display-single::text"
+  #       funding_amount: "td.views-field-field-cuantia::text"
+  #   robots_txt_obey: true
+  #   category_default: "Investigación"
+  #   custom_parser: false
+
+  # ── Batch 4a: 25 International sources ─────────────────────────────────
+  #
+  # NOTE: All selectors below are ESTIMATED based on common CMS patterns
+  # for each site. None of these URLs have been live-tested. After the
+  # first real crawl, inspect extraction logs and tune selectors. Sources
+  # whose selectors persistently fail should be marked custom_parser: true
+  # and delegated to an adapter function via spiders/adapters.py.
+
+  # ── European Union / European Commission ─────────────────────────────
+
+  - name: "Horizon Europe - Funding & Tender Opportunities"
+    url: "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/topic-search"
+    country: "Internacional"
+    fetcher: "stealthy"
+    pagination:
+      type: "query_param"
+      param: "pageNumber"
+      start: 1
+    selectors:
+      container: "div.topic-search-result, div.opp-search-result"
+      fields:
+        title: "a.topic-title::text, h3 a::text"
+        url: "a.topic-title::attr(href), h3 a::attr(href)"
+        description: "p.topic-description::text, div.description p::text"
+        closing_date: "span.closing-date::text, span.deadline::text"
+        opening_date: "span.opening-date::text, span.publication-date::text"
+        official_body: "span.programme-name::text, div.programme::text"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+    # Note: Horizon Europe portal is JS-heavy (Angular) — stealthy fetcher
+    # should handle it. Selectors are estimated from the topic-search view.
+
+  - name: "European Innovation Council - Funding Opportunities"
+    url: "https://eic.ec.europa.eu/eic-funding-opportunities_en"
+    country: "Internacional"
+    fetcher: "stealthy"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.eic-opportunity, div.funding-item"
+      fields:
+        title: "h3 a::text, h2 a::text"
+        url: "h3 a::attr(href), h2 a::attr(href)"
+        description: "div.teaser-text p::text, p.description::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+        official_body: "span.programme::text"
+    robots_txt_obey: true
+    category_default: "Innovación"
+    custom_parser: false
+    # Note: EIC site uses Drupal; selectors follow standard Drupal view-row
+    # pattern for funding-item listings.
+
+  - name: "Erasmus+ - Opportunities"
+    url: "https://erasmus-plus.ec.europa.eu/opportunities"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.opportunity-item, article.opportunity"
+      fields:
+        title: "h3 a::text, h2.opportunity-title a::text"
+        url: "h3 a::attr(href), h2.opportunity-title a::attr(href)"
+        description: "p.teaser::text, div.opportunity-teaser p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+        opening_date: "span.start-date::text"
+    robots_txt_obey: true
+    category_default: "Educación"
+    custom_parser: false
+    # Note: Erasmus+ site is built on the EU's corporate Drupal; listing
+    # cards with teaser text and deadline dates.
+
+  - name: "EIT - Opportunities"
+    url: "https://eit.europa.eu/our-activities/opportunities"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.eit-opportunity, article.opportunity-card"
+      fields:
+        title: "h3 a::text, h2.opportunity-title a::text"
+        url: "h3 a::attr(href), h2.opportunity-title a::attr(href)"
+        description: "div.field-content p::text, p.teaser-text::text"
+        closing_date: "span.date-display-single::text, time.deadline::attr(datetime)"
+    robots_txt_obey: true
+    category_default: "Innovación"
+    custom_parser: false
+    # Note: EIT site uses Drupal; standard view-row card layout.
+
+  # ── Development Banks & International Organizations ────────────────
+
+  - name: "BID Lab - Convocatorias"
+    url: "https://bidlab.org/es/convocatorias"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.convocatoria-card, article.convocatoria-item"
+      fields:
+        title: "h3.titulo a::text, h2 a::text"
+        url: "h3.titulo a::attr(href), h2 a::attr(href)"
+        description: "div.descripcion p::text, p.resumen::text"
+        closing_date: "span.fecha-limite::text, time.fecha::text"
+        opening_date: "span.fecha-publicacion::text"
+    robots_txt_obey: true
+    category_default: "Emprendimiento"
+    custom_parser: false
+    # Note: BID Lab uses WordPress with a custom theme. Card-based listing
+    # with title, description, and dates.
+
+  - name: "Banco Mundial - Procurement Opportunities"
+    url: "https://www.worldbank.org/en/programs/procurement"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.procurement-item, div.project-item, div.opportunity-card"
+      fields:
+        title: "h3 a::text, h2.title a::text"
+        url: "h3 a::attr(href), h2.title a::attr(href)"
+        description: "p.summary::text, div.description p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+        official_body: "span.country-name::text, div.region::text"
+    robots_txt_obey: true
+    category_default: "Desarrollo"
+    custom_parser: false
+    # Note: World Bank site loads content dynamically; fetcher may need to
+    # be upgraded to dynamic if the listing is JS-rendered.
+
+  - name: "CAF - Convocatorias"
+    url: "https://www.caf.com/es/convocatorias"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "pagina"
+      start: 1
+    selectors:
+      container: "div.convocatoria-item, article.convocatoria"
+      fields:
+        title: "h3.titulo a::text, h2 a::text"
+        url: "h3.titulo a::attr(href), h2 a::attr(href)"
+        description: "div.descripcion p::text, p.detalle::text"
+        closing_date: "span.fecha-cierre::text, time.fecha::text"
+        opening_date: "span.fecha-apertura::text"
+    robots_txt_obey: true
+    category_default: "Desarrollo"
+    custom_parser: false
+    # Note: CAF site uses Sitefinity CMS; selectors estimated from card
+    # listing patterns common to that platform.
+
+  - name: "UNESCO - Opportunities"
+    url: "https://www.unesco.org/es/opportunities"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.opportunity-teaser, article.teaser-item"
+      fields:
+        title: "h3 a::text, h2.teaser-title a::text"
+        url: "h3 a::attr(href), h2.teaser-title a::attr(href)"
+        description: "p.teaser-text::text, div.field-content p::text"
+        closing_date: "span.date-display-single::text, time.deadline::attr(datetime)"
+    robots_txt_obey: true
+    category_default: "Educación"
+    custom_parser: false
+    # Note: UNESCO uses Drupal; standard teaser-list view pattern.
+
+  - name: "OEA - Oportunidades"
+    url: "https://www.oas.org/es/oportunidades/"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.oportunidad-item, div.opportunity-card"
+      fields:
+        title: "h3 a::text, h2.titulo a::text"
+        url: "h3 a::attr(href), h2.titulo a::attr(href)"
+        description: "p.descripcion::text, div.summary p::text"
+        closing_date: "span.fecha-limite::text, time.fecha::text"
+    robots_txt_obey: true
+    category_default: "Desarrollo"
+    custom_parser: false
+    # Note: OAS site layout varies by department; this targets the main
+    # oportunidades landing page.
+
+  # ── Science & Research Networks ──────────────────────────────────────
+
+  - name: "CYTED - Convocatorias"
+    url: "https://www.cyted.org/convocatorias"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.view-content div.views-row, article.convocatoria-item"
+      fields:
+        title: "h2 a::text, h3 a::text"
+        url: "h2 a::attr(href), h3 a::attr(href)"
+        description: "div.field-content p::text, p.descripcion::text"
+        closing_date: "span.date-display-single::text, span.fecha::text"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+    # Note: CYTED uses Drupal; Drupal view-row listing pattern.
+
+  # ── Scholarships & Academic Exchange ─────────────────────────────────
+
+  - name: "DAAD - Becas"
+    url: "https://www.daad.co/es/becas/"
+    country: "Alemania"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.daad-scholarship, div.scholarship-item, div.result-item"
+      fields:
+        title: "h3 a::text, h2.scholarship-title a::text"
+        url: "h3 a::attr(href), h2.scholarship-title a::attr(href)"
+        description: "p.description::text, div.teaser p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+        funding_amount: "span.funding::text, div.funding-amount::text"
+    robots_txt_obey: true
+    category_default: "Becas"
+    custom_parser: false
+    # Note: DAAD uses a custom CMS; DAAD Colombia country portal targets
+    # Spanish-language scholarship offers for Colombian applicants.
+
+  - name: "Chevening - Scholarships"
+    url: "https://www.chevening.org/scholarships/"
+    country: "Reino Unido"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.scholarship-card, article.scholarship-item"
+      fields:
+        title: "h3.card-title a::text, h2 a::text"
+        url: "h3.card-title a::attr(href), h2 a::attr(href)"
+        description: "p.card-text::text, div.description p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+    robots_txt_obey: true
+    category_default: "Becas"
+    custom_parser: false
+    # Note: Chevening site uses a custom WordPress theme; card-based
+    # scholarship listings.
+
+  - name: "Fulbright - Grant Opportunities"
+    url: "https://us.fulbrightonline.org/"
+    country: "Estados Unidos"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.grant-item, article.grant-listing, div.opportunity-item"
+      fields:
+        title: "h3 a::text, h2.grant-title a::text"
+        url: "h3 a::attr(href), h2.grant-title a::attr(href)"
+        description: "p.description::text, div.teaser p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+    robots_txt_obey: true
+    category_default: "Becas"
+    custom_parser: false
+    # Note: Fulbright US site lists grant opportunities with descriptions
+    # and application deadlines.
+
+  # ── Technology & Startup Programs ────────────────────────────────────
+
+  - name: "MIT Solve - Challenges"
+    url: "https://solve.mit.edu/challenges"
+    country: "Estados Unidos"
+    fetcher: "dynamic"
+    pagination:
+      type: "infinite_scroll"
+      max_pages: 5
+    selectors:
+      container: "div.challenge-card, div.solve-card, div.challenge-item"
+      fields:
+        title: "h3.card-title a::text, h2.challenge-name::text"
+        url: "a.card-link::attr(href), h3 a::attr(href)"
+        description: "p.challenge-teaser::text, div.description p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+        funding_amount: "span.prize::text, div.prize-amount::text"
+    robots_txt_obey: true
+    category_default: "Innovación"
+    custom_parser: false
+    # Note: MIT Solve is a JS-heavy React app; dynamic fetcher with JS
+    # rendering is required. Challenge cards are loaded via API.
+
+  - name: "Google for Startups"
+    url: "https://startup.google.com/"
+    country: "Estados Unidos"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.program-card, div.startup-program-item"
+      fields:
+        title: "h3.program-name::text, h2 a::text"
+        url: "a.program-link::attr(href)"
+        description: "p.program-description::text, div.description p::text"
+    robots_txt_obey: true
+    category_default: "Emprendimiento"
+    custom_parser: false
+    # Note: Google for Startups is a marketing site; program listings
+    # change infrequently. This is a low-frequency source.
+
+  - name: "Microsoft for Startups"
+    url: "https://www.microsoft.com/en-us/startups"
+    country: "Estados Unidos"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.startup-benefit, div.card-item, section.founders-hub div.card"
+      fields:
+        title: "h3.card-title::text, h2.benefit-title::text"
+        url: "a.card-link::attr(href)"
+        description: "p.card-description::text, div.card-body p::text"
+    robots_txt_obey: true
+    category_default: "Emprendimiento"
+    custom_parser: false
+    # Note: Microsoft's startup page is a marketing landing page; program
+    # listings are relatively static.
+
+  - name: "AWS Activate"
+    url: "https://aws.amazon.com/activate/"
+    country: "Estados Unidos"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.activate-benefit, div.aws-content div.benefit-item"
+      fields:
+        title: "h3.benefit-title::text, h2 a::text"
+        url: "a.cta-button::attr(href), a.learn-more::attr(href)"
+        description: "p.benefit-description::text, div.benefit-text p::text"
+    robots_txt_obey: true
+    category_default: "Emprendimiento"
+    custom_parser: false
+    # Note: AWS Activate is a static marketing page; benefits listed
+    # in cards with links to program details.
+
+  # ── Development Agencies ─────────────────────────────────────────────
+
+  - name: "GIZ - Opportunities"
+    url: "https://www.giz.de/en/opportunities/"
+    country: "Alemania"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.opportunity-item, div.teaser-box, article.teaser"
+      fields:
+        title: "h3 a::text, h2.teaser-headline a::text"
+        url: "h3 a::attr(href), h2.teaser-headline a::attr(href)"
+        description: "p.teaser-text::text, div.field-content p::text"
+        closing_date: "span.date-display-single::text, time.date::attr(datetime)"
+    robots_txt_obey: true
+    category_default: "Desarrollo"
+    custom_parser: false
+    # Note: GIZ uses Typo3 CMS; teaser-box listing with headline, text,
+    # and date.
+
+  - name: "USAID - Business Opportunities"
+    url: "https://www.usaid.gov/work-usaid/opportunities"
+    country: "Estados Unidos"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.opportunity-card, article.opportunity-row, div.usa-card"
+      fields:
+        title: "h3 a::text, h2.opportunity-title a::text"
+        url: "h3 a::attr(href), h2.opportunity-title a::attr(href)"
+        description: "p.summary::text, div.card-description p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+        official_body: "span.agency::text, div.bureau::text"
+    robots_txt_obey: true
+    category_default: "Desarrollo"
+    custom_parser: false
+    # Note: USAID uses the U.S. Web Design System (USWDS); card-based
+    # listing with title, summary, and deadline.
+
+  # ── Global Health & Philanthropy ──────────────────────────────────────
+
+  - name: "Wellcome Trust - Grant Funding"
+    url: "https://wellcome.org/grant-funding"
+    country: "Reino Unido"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.funding-scheme, div.card-funding, article.scheme-item"
+      fields:
+        title: "h3.card-title a::text, h2.scheme-title a::text"
+        url: "h3.card-title a::attr(href), h2.scheme-title a::attr(href)"
+        description: "p.card-description::text, div.teaser p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+        funding_amount: "span.amount::text, div.funding-range::text"
+        opening_date: "span.opening-date::text"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+    # Note: Wellcome site uses Drupal; funding scheme cards with
+    # deadline and amount information.
+
+  - name: "Gates Foundation - Opportunities"
+    url: "https://www.gatesfoundation.org/opportunities"
+    country: "Estados Unidos"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.opportunity-card, div.lo-card, article.opportunity-item"
+      fields:
+        title: "h3.card-title a::text, h2 a::text"
+        url: "h3.card-title a::attr(href), h2 a::attr(href)"
+        description: "p.card-text::text, div.description p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+    # Note: Gates Foundation uses a custom CMS; opportunity cards with
+    # title, description, and deadline.
+
+  # ── Scientific Networks & Fellowships ────────────────────────────────
+
+  - name: "TWAS - Opportunities"
+    url: "https://twas.org/opportunities"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 0
+    selectors:
+      container: "div.views-row, article.node-opportunity, div.opportunity-item"
+      fields:
+        title: "h2 a::text, h3.node-title a::text"
+        url: "h2 a::attr(href), h3.node-title a::attr(href)"
+        description: "div.field-content p::text, div.teaser p::text"
+        closing_date: "span.date-display-single::text, time.deadline::attr(datetime)"
+        funding_amount: "span.funding-amount::text, div.funding p::text"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+    # Note: TWAS uses Drupal; standard view-row listing with node titles.
+
+  - name: "CLACSO - Becas"
+    url: "https://www.clacso.org/becas/"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.beca-item, article.beca-card, div.lista-becas div.item"
+      fields:
+        title: "h3.titulo a::text, h2 a::text"
+        url: "h3.titulo a::attr(href), h2 a::attr(href)"
+        description: "p.descripcion::text, div.resumen p::text"
+        closing_date: "span.fecha-cierre::text, time.fecha::text"
+    robots_txt_obey: true
+    category_default: "Investigación"
+    custom_parser: false
+    # Note: CLACSO uses WordPress; card-based listing for scholarship
+    # and fellowship programs.
+
+  # ── International Organizations ──────────────────────────────────────
+
+  - name: "OECD - Careers"
+    url: "https://www.oecd.org/careers/"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "none"
+    selectors:
+      container: "div.job-item, div.career-card, article.vacancy-item"
+      fields:
+        title: "h3.job-title a::text, h2 a::text"
+        url: "h3.job-title a::attr(href), h2 a::attr(href)"
+        description: "p.job-teaser::text, div.description p::text"
+        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
+        official_body: "span.department::text, div.unit::text"
+    robots_txt_obey: true
+    category_default: "Desarrollo"
+    custom_parser: false
+    # Note: OECD uses a custom job listing portal; career opportunities
+    # with department and deadline.
+
+  - name: "Naciones Unidas - Oportunidades"
+    url: "https://www.un.org/es/opportunities"
+    country: "Internacional"
+    fetcher: "http"
+    pagination:
+      type: "query_param"
+      param: "page"
+      start: 1
+    selectors:
+      container: "div.opportunity-item, article.job-card, div.views-row"
+      fields:
+        title: "h3 a::text, h2.job-title a::text"
+        url: "h3 a::attr(href), h2.job-title a::attr(href)"
+        description: "p.summary::text, div.description p::text"
+        closing_date: "span.date-display-single::text, time.date::attr(datetime)"
+        official_body: "span.department::text, div.organization::text"
+    robots_txt_obey: true
+    category_default: "Desarrollo"
+    custom_parser: false
+    # Note: United Nations careers portal uses Drupal; Spanish-language
+    # opportunities page.

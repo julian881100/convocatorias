@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Convocatorias — Reporte</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4">
+  </script>
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════
+       RESET & BASE
+       ═══════════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                   Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      line-height: 1.6;
+    }
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 1rem; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════════════════════════ */
+    header {
+      display: flex; flex-wrap: wrap; align-items: center;
+      justify-content: space-between; gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    header h1 {
+      font-size: 1.75rem; font-weight: 700; color: #0f172a;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .header-meta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .badge {
+      display: inline-block; background: #e2e8f0; color: #475569;
+      font-size: 0.8rem; padding: 0.25rem 0.75rem; border-radius: 999px;
+      white-space: nowrap;
+    }
+    .subtitle { font-size: 0.9rem; color: #64748b; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       STATS CARDS
+       ═══════════════════════════════════════════════════════════════════ */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem; margin-bottom: 1.5rem;
+    }
+    .stat-card {
+      background: #fff; border-radius: 0.75rem; padding: 1rem;
+      text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: transform 0.15s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-value {
+      display: block; font-size: 1.75rem; font-weight: 700;
+      line-height: 1.2;
+    }
+    .stat-label {
+      display: block; font-size: 0.8rem; color: #64748b;
+      margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .stat-card:nth-child(1) .stat-value { color: #0f172a; }
+    .stat-card:nth-child(2) .stat-value { color: #2563eb; }
+    .stat-card:nth-child(3) .stat-value { color: #8b5cf6; }
+    .stat-card:nth-child(4) .stat-value { color: #22c55e; }
+    .stat-card:nth-child(5) .stat-value { color: #eab308; }
+    .stat-card:nth-child(6) .stat-value { color: #ef4444; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       CHARTS
+       ═══════════════════════════════════════════════════════════════════ */
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .chart-container {
+      background: #fff; border-radius: 0.75rem; padding: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      position: relative; min-height: 220px;
+    }
+    .chart-container canvas { max-height: 260px; max-width: 100%; }
+    .chart-container .no-data {
+      text-align: center; color: #94a3b8; padding: 3rem 0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       FILTERS
+       ═══════════════════════════════════════════════════════════════════ */
+    .filters-bar {
+      background: #fff; border-radius: 0.75rem; padding: 1rem 1.25rem;
+      margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem;
+    }
+    .filter-group { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .filter-group label { font-size: 0.85rem; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 0.25rem; }
+    .filter-group input[type="checkbox"] { accent-color: #2563eb; cursor: pointer; }
+    .filter-group select, .filter-group input[type="search"] {
+      font-size: 0.85rem; padding: 0.35rem 0.6rem; border: 1px solid #cbd5e1;
+      border-radius: 0.4rem; background: #f8fafc; color: #1e293b;
+      outline: none; min-width: 130px;
+    }
+    .filter-group select:focus, .filter-group input[type="search"]:focus {
+      border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.15);
+    }
+    .filter-count {
+      font-size: 0.85rem; color: #64748b; margin-left: auto;
+      white-space: nowrap;
+    }
+    .filter-separator { width: 1px; height: 24px; background: #e2e8f0; }
+    .filter-country-group {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       CARDS GRID
+       ═══════════════════════════════════════════════════════════════════ */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem; margin-bottom: 1.5rem;
+    }
+    .card {
+      background: #fff; border-radius: 0.75rem; padding: 1rem 1.1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      transition: box-shadow 0.15s, transform 0.15s;
+      display: flex; flex-direction: column; gap: 0.4rem;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .card-title {
+      font-size: 1rem; font-weight: 600; line-height: 1.35;
+      margin-bottom: 0.15rem;
+    }
+    .card-title a { color: #1e293b; }
+    .card-title a:hover { color: #2563eb; }
+    .card-meta { font-size: 0.8rem; color: #64748b; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .card-body { font-size: 0.85rem; color: #475569; display: flex; flex-direction: column; gap: 0.3rem; flex: 1; }
+    .card-footer { margin-top: auto; padding-top: 0.4rem; display: flex; flex-wrap: wrap; gap: 0.25rem; }
+
+    /* Badges */
+    .badge-sm {
+      display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.5rem;
+      border-radius: 999px; font-weight: 500; white-space: nowrap;
+    }
+    .badge-country { background: #dbeafe; color: #1d4ed8; }
+    .badge-category { background: #f3e8ff; color: #7c3aed; }
+    .badge-sector { background: #d1fae5; color: #047857; }
+    .badge-tag { background: #f1f5f9; color: #64748b; }
+    .badge-funding { background: #fef3c7; color: #92400e; }
+
+    /* Status badges */
+    .status-badge {
+      display: inline-block; font-size: 0.75rem; font-weight: 600;
+      padding: 0.2rem 0.7rem; border-radius: 999px; white-space: nowrap;
+    }
+    .status-vigente { background: #dcfce7; color: #166534; }
+    .status-verification { background: #fef9c3; color: #854d0e; }
+    .status-vencida { background: #fee2e2; color: #991b1b; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       TABLE
+       ═══════════════════════════════════════════════════════════════════ */
+    .table-section { margin-bottom: 1.5rem; overflow-x: auto; }
+    .table-section h2 {
+      font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem;
+      color: #0f172a;
+    }
+    #results-table {
+      width: 100%; border-collapse: collapse; font-size: 0.85rem;
+      background: #fff; border-radius: 0.75rem; overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    #results-table th {
+      background: #f8fafc; padding: 0.6rem 0.75rem; text-align: left;
+      font-weight: 600; color: #475569; cursor: pointer; user-select: none;
+      white-space: nowrap; border-bottom: 2px solid #e2e8f0;
+    }
+    #results-table th:hover { background: #f1f5f9; }
+    #results-table th::after {
+      content: " ↕"; font-size: 0.7rem; color: #94a3b8;
+    }
+    #results-table th.sort-asc::after { content: " ↑"; color: #2563eb; }
+    #results-table th.sort-desc::after { content: " ↓"; color: #2563eb; }
+    #results-table td {
+      padding: 0.55rem 0.75rem; border-bottom: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+    #results-table tr:hover td { background: #f8fafc; }
+    .table-empty td { text-align: center; color: #94a3b8; padding: 2rem; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       ERROR SECTION
+       ═══════════════════════════════════════════════════════════════════ */
+    .error-section {
+      background: #fff; border-radius: 0.75rem; margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden;
+    }
+    .error-section details { padding: 1rem 1.25rem; }
+    .error-section summary {
+      cursor: pointer; font-weight: 600; color: #dc2626;
+      font-size: 0.95rem;
+    }
+    .error-section summary::marker { color: #dc2626; }
+    .error-section table {
+      width: 100%; border-collapse: collapse; margin-top: 0.75rem;
+      font-size: 0.85rem;
+    }
+    .error-section td {
+      padding: 0.5rem 0.75rem; border-bottom: 1px solid #f1f5f9;
+    }
+    .error-cell { color: #dc2626; font-family: ui-monospace, monospace; font-size: 0.8rem; }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════════════════ */
+    footer {
+      text-align: center; font-size: 0.8rem; color: #94a3b8;
+      padding: 1.5rem 0; border-top: 1px solid #e2e8f0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════════════════ */
+    @media (max-width: 1024px) {
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .charts-row { grid-template-columns: 1fr; }
+      .filters-bar { flex-direction: column; align-items: stretch; }
+      .filter-count { margin-left: 0; text-align: right; }
+      .filter-separator { display: none; }
+    }
+    @media (max-width: 640px) {
+      .container { padding: 0.75rem; }
+      header h1 { font-size: 1.35rem; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .cards-grid { grid-template-columns: 1fr; }
+      .stat-value { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    {% set status_label_map = {
+      "vigente": "Vigente",
+      "vencida": "Vencida",
+      "requires_verification": "Requiere verificación"
+    } %}
+    {% set status_css_map = {
+      "vigente": "status-vigente",
+      "vencida": "status-vencida",
+      "requires_verification": "status-verification"
+    } %}
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         1. HEADER
+         ═══════════════════════════════════════════════════════════════════ -->
+    <header>
+      <h1>Convocatorias</h1>
+      <div class="header-meta">
+        <span class="badge">{{ generated_at }}</span>
+        <span class="subtitle">Última actualización: {{ generated_at }}</span>
+      </div>
+    </header>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         2. STATS CARDS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-value">{{ stats.total|default(0) }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ stats.colombia|default(0) }}</span>
+        <span class="stat-label">Colombia</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ stats.international|default(0) }}</span>
+        <span class="stat-label">Internacional</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ stats.vigentes|default(0) }}</span>
+        <span class="stat-label">Vigentes</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ stats.requires_verification|default(0) }}</span>
+        <span class="stat-label">Requieren verificación</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value">{{ total_errors|default(0) }}</span>
+        <span class="stat-label">Con errores</span>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         3. CHARTS
+         ═══════════════════════════════════════════════════════════════════ -->
+    <div class="charts-row">
+      <div class="chart-container">
+        <h3 style="font-size:0.9rem;color:#475569;margin-bottom:0.5rem;text-align:center;">
+          Distribución por categoría
+        </h3>
+        <canvas id="chart-category"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3 style="font-size:0.9rem;color:#475569;margin-bottom:0.5rem;text-align:center;">
+          Convocatorias por país
+        </h3>
+        <canvas id="chart-country"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3 style="font-size:0.9rem;color:#475569;margin-bottom:0.5rem;text-align:center;">
+          Por estado
+        </h3>
+        <canvas id="chart-status"></canvas>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         4. FILTERS BAR
+         ═══════════════════════════════════════════════════════════════════ -->
+    <div class="filters-bar" id="filters-bar">
+      <!-- Country checkboxes -->
+      <div class="filter-group filter-country-group">
+        <span style="font-size:0.85rem;font-weight:600;color:#334155;">País:</span>
+        <label>
+          <input type="checkbox" class="filter-country" value="Colombia"
+                 onchange="filterCards()"{% if 'Colombia' in countries %} checked{% endif %}>
+          Colombia
+        </label>
+        <label>
+          <input type="checkbox" class="filter-country" value="__internacional__"
+                 onchange="filterCards()">
+          Internacional
+        </label>
+        {% for country in countries %}
+        {% if country != 'Colombia' %}
+        <label>
+          <input type="checkbox" class="filter-country" value="{{ country }}"
+                 onchange="filterCards()">
+          {{ country }}
+        </label>
+        {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="filter-separator"></div>
+
+      <!-- Category dropdown -->
+      <div class="filter-group">
+        <label for="filter-category" style="font-weight:600;">Categoría:</label>
+        <select id="filter-category" onchange="filterCards()">
+          <option value="todas">Todas</option>
+          {% for cat in categories %}
+          <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="filter-separator"></div>
+
+      <!-- Status dropdown -->
+      <div class="filter-group">
+        <label for="filter-status" style="font-weight:600;">Estado:</label>
+        <select id="filter-status" onchange="filterCards()">
+          <option value="todas">Todas</option>
+          <option value="vigente">Vigente</option>
+          <option value="requires_verification">Requiere verificación</option>
+          <option value="vencida">Vencida</option>
+        </select>
+      </div>
+
+      <div class="filter-separator"></div>
+
+      <!-- Search -->
+      <div class="filter-group">
+        <label for="filter-search" style="font-weight:600;">Buscar:</label>
+        <input type="search" id="filter-search" placeholder="Título, etiquetas…"
+               oninput="filterCards()">
+      </div>
+
+      <span class="filter-count">
+        Mostrando <strong id="visible-count">{{ total_records }}</strong> de <strong>{{ total_records }}</strong>
+      </span>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         5. CARDS GRID
+         ═══════════════════════════════════════════════════════════════════ -->
+    <div class="cards-grid" id="cards-grid">
+      {% for record in records %}
+      <div class="card"
+           data-country="{{ record.country }}"
+           data-category="{{ record.category }}"
+           data-status="{{ record.status }}"
+           data-search="{{ record._search }}"
+           data-title="{{ record.title|e }}">
+        <div class="card-title">
+          <a href="{{ record.source_url }}" target="_blank" rel="noopener">
+            {{ record.title }}
+          </a>
+        </div>
+        <div class="card-meta">
+          <span>{{ record.source_name }}</span>
+          {% if record.country %}
+          <span class="badge-sm badge-country">{{ record.country }}</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+            {% if record.category %}
+            <span class="badge-sm badge-category">{{ record.category }}</span>
+            {% endif %}
+            {% for s in record.sector %}
+            <span class="badge-sm badge-sector">{{ s }}</span>
+            {% endfor %}
+          </div>
+
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+            <span class="status-badge {{ status_css_map.get(record.status, 'status-verification') }}">
+              {{ status_label_map.get(record.status, record.status) }}
+            </span>
+
+            {% if record.is_permanent %}
+            <span style="font-size:0.85rem;color:#0891b2;font-weight:500;">
+              Ventanilla abierta
+            </span>
+            {% elif record.closing_date %}
+            <span style="font-size:0.85rem;color:#64748b;">
+              Cierra: {{ record.closing_date }}
+            </span>
+            {% endif %}
+          </div>
+
+          <div style="font-size:0.8rem;color:#64748b;display:flex;flex-wrap:wrap;gap:0.25rem;">
+            {% if record.beneficiary_type %}
+            <span>{{ record.beneficiary_type|join(', ') }}</span>
+            {% endif %}
+            {% if record.funding_type %}
+            <span>· {{ record.funding_type|join(', ') }}</span>
+            {% endif %}
+            {% if record.funding_amount %}
+            <span>· {{ record.funding_amount }}</span>
+            {% endif %}
+          </div>
+        </div>
+        {% if record.tags %}
+        <div class="card-footer">
+          {% for tag in record.tags %}
+          <span class="badge-sm badge-tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <p style="grid-column:1/-1;text-align:center;color:#94a3b8;padding:3rem 0;">
+        No hay convocatorias para mostrar.
+      </p>
+      {% endfor %}
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         6. TABLE SECTION
+         ═══════════════════════════════════════════════════════════════════ -->
+    <div class="table-section">
+      <h2>Tabla de convocatorias</h2>
+      <div style="overflow-x:auto;">
+        <table id="results-table">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)" data-col="0">Título</th>
+              <th onclick="sortTable(1)" data-col="1">Fuente</th>
+              <th onclick="sortTable(2)" data-col="2">País</th>
+              <th onclick="sortTable(3)" data-col="3">Categoría</th>
+              <th onclick="sortTable(4)" data-col="4">Fecha cierre</th>
+              <th onclick="sortTable(5)" data-col="5">Estado</th>
+              <th onclick="sortTable(6)" data-col="6">Financiación</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for record in records %}
+            <tr data-country="{{ record.country }}"
+                data-category="{{ record.category }}"
+                data-status="{{ record.status }}"
+                data-search="{{ record._search }}">
+              <td><a href="{{ record.source_url }}" target="_blank" rel="noopener">{{ record.title }}</a></td>
+              <td>{{ record.source_name }}</td>
+              <td>{{ record.country }}</td>
+              <td>{{ record.category }}</td>
+              <td>
+                {% if record.is_permanent %}
+                Ventanilla abierta
+                {% elif record.closing_date %}
+                {{ record.closing_date }}
+                {% else %}
+                —
+                {% endif %}
+              </td>
+              <td>
+                <span class="status-badge {{ status_css_map.get(record.status, 'status-verification') }}">
+                  {{ status_label_map.get(record.status, record.status) }}
+                </span>
+              </td>
+              <td>{{ record.funding_type|join(', ') }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7" class="table-empty">No hay registros disponibles.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         7. ERROR SECTION
+         ═══════════════════════════════════════════════════════════════════ -->
+    {% if errors %}
+    <div class="error-section">
+      <details>
+        <summary>Errores de fuentes ({{ total_errors }})</summary>
+        <table>
+          <thead>
+            <tr>
+              <th style="text-align:left;padding:0.5rem 0.75rem;border-bottom:2px solid #e2e8f0;color:#475569;">
+                Mensaje de error
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for error in errors %}
+            <tr>
+              <td class="error-cell">{{ error }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </details>
+    </div>
+    {% endif %}
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         8. FOOTER
+         ═══════════════════════════════════════════════════════════════════ -->
+    <footer>
+      Generado el {{ generated_at }} por v{{ version }}
+    </footer>
+
+  </div><!-- /.container -->
+
+  <!-- ═════════════════════════════════════════════════════════════════════
+       JAVASCRIPT
+       ═════════════════════════════════════════════════════════════════════ -->
+  <script>
+    /* ─────────────── Chart color palette ─────────────── */
+    const COLORS = [
+      '#3b82f6', '#22c55e', '#eab308', '#ef4444', '#a855f7',
+      '#ec4899', '#14b8a6', '#f97316', '#6366f1', '#84cc16',
+      '#06b6d4', '#d946ef', '#f43f5e', '#8b5cf6', '#10b981',
+      '#0ea5e9', '#fb923c', '#a78bfa', '#34d399', '#f472b6',
+    ];
+    const STATUS_COLORS = { vigente: '#22c55e', vencida: '#ef4444', requires_verification: '#eab308' };
+
+    /* ─────────────── Chart data from Jinja2 ─────────────── */
+    const CATEGORY_LABELS = [
+      {% for cat, count in (stats.by_category or {}).items() %}
+      "{{ cat|e }}",
+      {% endfor %}
+    ];
+    const CATEGORY_VALUES = [
+      {% for cat, count in (stats.by_category or {}).items() %}
+      {{ count }},
+      {% endfor %}
+    ];
+
+    const COUNTRY_LABELS = [
+      {% for country, count in (stats.by_country or {}).items() %}
+      "{{ country|e }}",
+      {% endfor %}
+    ];
+    const COUNTRY_VALUES = [
+      {% for country, count in (stats.by_country or {}).items() %}
+      {{ count }},
+      {% endfor %}
+    ];
+
+    const STATUS_LABELS = ["Vigente", "Vencida", "Requiere verificación"];
+    const STATUS_VALUES = [
+      {{ (stats.by_status or {}).get("vigente", 0) }},
+      {{ (stats.by_status or {}).get("vencida", 0) }},
+      {{ (stats.by_status or {}).get("requires_verification", 0) }},
+    ];
+
+    /* ─────────────── Init charts ─────────────── */
+    function initCharts() {
+      const commonOpts = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { boxWidth: 12, padding: 12, font: { size: 11 } }
+          }
+        }
+      };
+
+      // Pie — category
+      const catCtx = document.getElementById('chart-category');
+      if (catCtx && CATEGORY_LABELS.length > 0) {
+        new Chart(catCtx, {
+          type: 'pie',
+          data: {
+            labels: CATEGORY_LABELS,
+            datasets: [{
+              data: CATEGORY_VALUES,
+              backgroundColor: COLORS.slice(0, CATEGORY_LABELS.length),
+            }]
+          },
+          options: commonOpts,
+        });
+      } else if (catCtx) {
+        catCtx.parentElement.innerHTML = '<p class="no-data">Sin datos</p>';
+      }
+
+      // Bar — country
+      const cntCtx = document.getElementById('chart-country');
+      if (cntCtx && COUNTRY_LABELS.length > 0) {
+        new Chart(cntCtx, {
+          type: 'bar',
+          data: {
+            labels: COUNTRY_LABELS,
+            datasets: [{
+              label: 'Convocatorias',
+              data: COUNTRY_VALUES,
+              backgroundColor: COLORS.slice(0, COUNTRY_LABELS.length),
+              borderRadius: 4,
+            }]
+          },
+          options: {
+            ...commonOpts,
+            indexAxis: 'y',
+            scales: {
+              x: { beginAtZero: true, ticks: { stepSize: 1 } },
+              y: { ticks: { font: { size: 10 } } },
+            },
+            plugins: { legend: { display: false } },
+          },
+        });
+      } else if (cntCtx) {
+        cntCtx.parentElement.innerHTML = '<p class="no-data">Sin datos</p>';
+      }
+
+      // Doughnut — status
+      const stCtx = document.getElementById('chart-status');
+      if (stCtx && STATUS_VALUES.some(v => v > 0)) {
+        new Chart(stCtx, {
+          type: 'doughnut',
+          data: {
+            labels: STATUS_LABELS,
+            datasets: [{
+              data: STATUS_VALUES,
+              backgroundColor: [
+                STATUS_COLORS.vigente,
+                STATUS_COLORS.vencida,
+                STATUS_COLORS.requires_verification,
+              ],
+            }]
+          },
+          options: commonOpts,
+        });
+      } else if (stCtx) {
+        stCtx.parentElement.innerHTML = '<p class="no-data">Sin datos</p>';
+      }
+    }
+
+    /* ─────────────── Client-side filtering ─────────────── */
+    function filterCards() {
+      const checkedCountries = Array.from(
+        document.querySelectorAll('.filter-country:checked')
+      ).map(function(cb) { return cb.value; });
+
+      const category = document.getElementById('filter-category').value;
+      const status = document.getElementById('filter-status').value;
+      const search = document.getElementById('filter-search').value.toLowerCase().trim();
+
+      const cards = document.querySelectorAll('.card');
+      const tableRows = document.querySelectorAll('#results-table tbody tr:not(.table-empty)');
+      let visible = 0;
+
+      function matches(cardOrRow) {
+        const cardCountry = cardOrRow.getAttribute('data-country');
+        const cardCategory = cardOrRow.getAttribute('data-category');
+        const cardStatus = cardOrRow.getAttribute('data-status');
+        const cardSearch = cardOrRow.getAttribute('data-search') || '';
+
+        // Country: none checked => show all
+        var countryMatch = false;
+        if (checkedCountries.length === 0) {
+          countryMatch = true;
+        } else {
+          for (var i = 0; i < checkedCountries.length; i++) {
+            var val = checkedCountries[i];
+            if (val === '__internacional__' && cardCountry !== 'Colombia') {
+              countryMatch = true;
+              break;
+            } else if (val === cardCountry) {
+              countryMatch = true;
+              break;
+            }
+          }
+        }
+
+        var categoryMatch = !category || category === 'todas' || cardCategory === category;
+        var statusMatch = !status || status === 'todas' || cardStatus === status;
+        var searchMatch = !search || cardSearch.indexOf(search) !== -1;
+
+        return countryMatch && categoryMatch && statusMatch && searchMatch;
+      }
+
+      // Cards
+      cards.forEach(function(card) {
+        if (matches(card)) {
+          card.style.display = '';
+          visible++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      // Table rows
+      tableRows.forEach(function(row) {
+        if (matches(row)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // Counter
+      document.getElementById('visible-count').textContent = visible;
+    }
+
+    /* ─────────────── Table sorting ─────────────── */
+    function sortTable(colIndex) {
+      var table = document.getElementById('results-table');
+      var tbody = table.querySelector('tbody');
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+
+      // Only sort data rows (skip .table-empty)
+      var dataRows = rows.filter(function(r) { return !r.classList.contains('table-empty'); });
+      var emptyRows = rows.filter(function(r) { return r.classList.contains('table-empty'); });
+
+      if (dataRows.length === 0) return;
+
+      var prevCol = table.getAttribute('data-sort-col');
+      var prevDir = table.getAttribute('data-sort-dir');
+      var ascending = true;
+      if (prevCol === String(colIndex) && prevDir === 'asc') {
+        ascending = false;
+      }
+
+      dataRows.sort(function(a, b) {
+        var aVal = (a.children[colIndex] ? a.children[colIndex].textContent.trim() : '');
+        var bVal = (b.children[colIndex] ? b.children[colIndex].textContent.trim() : '');
+        var cmp = aVal.localeCompare(bVal, 'es', { numeric: true });
+        return ascending ? cmp : -cmp;
+      });
+
+      // Update header arrows
+      table.querySelectorAll('th').forEach(function(th) {
+        th.classList.remove('sort-asc', 'sort-desc');
+      });
+      var header = table.querySelector('th[data-col="' + colIndex + '"]');
+      if (header) {
+        header.classList.add(ascending ? 'sort-asc' : 'sort-desc');
+      }
+
+      table.setAttribute('data-sort-col', colIndex);
+      table.setAttribute('data-sort-dir', ascending ? 'asc' : 'desc');
+
+      // Re-append sorted rows + empty rows at the end
+      dataRows.forEach(function(r) { tbody.appendChild(r); });
+      emptyRows.forEach(function(r) { tbody.appendChild(r); });
+    }
+
+    /* ─────────────── Init on DOM ready ─────────────── */
+    document.addEventListener('DOMContentLoaded', function() {
+      initCharts();
+      filterCards();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+# ── GitHub Actions workflow: Rastrear convocatorias ─────────────────────────
+#
+# Runs daily at 10:00 UTC (05:00 Colombia time), plus on-demand via
+# workflow_dispatch and on pushes to main that touch pipeline code or
+# source configuration.
+#
+# The workflow installs the package (with dev extras to include Playwright),
+# caches Playwright browser binaries, crawls all configured sources, and
+# deploys the generated HTML report + JSON snapshot to GitHub Pages.
+#
+# All source failures are isolated — the pipeline continues even when
+# individual sources error out, and the report is generated from whatever
+# data was successfully collected.
+
+name: Rastrear convocatorias
+
+"on":
+  schedule:
+    - cron: "0 10 * * *" # 10 AM UTC = 5 AM Colombia
+  workflow_dispatch: # Manual trigger
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "sources.yaml"
+      - "pyproject.toml"
+      - ".github/workflows/crawl.yml"
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # Cache Playwright browser binaries using pyproject.toml as a proxy
+      # for the scrapling version (which pins Playwright).  Using a file
+      # inside the repo avoids hashFiles() limitations with ~ paths.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright browsers
+        run: python -m playwright install chromium
+
+      - name: Run crawler
+        run: python -m rastreador_convocatorias --output-dir output
+        env:
+          REFERENCE_DATE: "2026-06-16"
+          CRAWL_TIMEOUT_MINUTES: "9"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: output/
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
