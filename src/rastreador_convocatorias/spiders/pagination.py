@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-MAX_PAGES_DEFAULT = 50
+MAX_PAGES_DEFAULT = 10
 
 
 # ── Query-param pagination ──────────────────────────────────────────────
