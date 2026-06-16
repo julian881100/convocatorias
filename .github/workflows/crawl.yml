@@ -67,10 +67,20 @@ jobs:
         run: python -m playwright install chromium
 
       - name: Run crawler
+        id: crawler
+        continue-on-error: true
         run: python -m rastreador_convocatorias --output-dir output
         env:
           REFERENCE_DATE: "2026-06-16"
           CRAWL_TIMEOUT_MINUTES: "20"
+
+      - name: Check crawler output
+        run: |
+          if [ ! -f output/report.html ]; then
+            echo "No report generated — crawler produced no usable data"
+            exit 1
+          fi
+          echo "Report found; proceeding to deploy"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
