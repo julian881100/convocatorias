@@ -9,6 +9,7 @@ sources:
       type: "query_param"
       param: "page"
       start: 0
+      max_pages: 5
     selectors:
       container: "table.views-table tbody tr"
       fields:
