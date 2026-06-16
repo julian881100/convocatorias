@@ -862,6 +862,7 @@ sources:
       type: "query_param"
       param: "page"
       start: 0
+      max_pages: 5
     selectors:
       container: "div.views-row, article.node-opportunity, div.opportunity-item"
       fields:
