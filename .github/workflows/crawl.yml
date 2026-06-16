@@ -80,6 +80,7 @@ jobs:
             echo "No report generated — crawler produced no usable data"
             exit 1
           fi
+          cp output/report.html output/index.html
           echo "Report found; proceeding to deploy"
 
       - name: Upload Pages artifact
