@@ -437,24 +437,21 @@ sources:
   - name: "European Innovation Council - Funding Opportunities"
     url: "https://eic.ec.europa.eu/eic-funding-opportunities_en"
     country: "Internacional"
-    fetcher: "stealthy"
+    fetcher: "http"
     pagination:
-      type: "query_param"
-      param: "page"
-      start: 0
+      type: "none"
     selectors:
-      container: "div.eic-opportunity, div.funding-item"
+      container: "article.ecl-card"
       fields:
-        title: "h3 a::text, h2 a::text"
-        url: "h3 a::attr(href), h2 a::attr(href)"
-        description: "div.teaser-text p::text, p.description::text"
-        closing_date: "span.deadline::text, time.deadline::attr(datetime)"
-        official_body: "span.programme::text"
+        title: "div.ecl-content-block__title a::text"
+        url: "div.ecl-content-block__title a::attr(href)"
+        description: "div.ecl-content-block__description p::text"
+        closing_date: "span.ecl-label--high::text"
+        official_body: "span.programme-name::text"
     robots_txt_obey: true
     category_default: "Innovación"
     custom_parser: false
-    # Note: EIC site uses Drupal; selectors follow standard Drupal view-row
-    # pattern for funding-item listings.
+    # Note: EIC uses ECL (European Component Library) cards on a landing page.
 
   - name: "Erasmus+ - Opportunities"
     url: "https://erasmus-plus.ec.europa.eu/opportunities"
@@ -486,17 +483,19 @@ sources:
       type: "query_param"
       param: "page"
       start: 0
+      max_pages: 3
     selectors:
-      container: "div.eit-opportunity, article.opportunity-card"
+      container: "div.views-row"
       fields:
-        title: "h3 a::text, h2.opportunity-title a::text"
-        url: "h3 a::attr(href), h2.opportunity-title a::attr(href)"
-        description: "div.field-content p::text, p.teaser-text::text"
-        closing_date: "span.date-display-single::text, time.deadline::attr(datetime)"
+        title: "div.teaser-title a::text"
+        url: "div.teaser-title a::attr(href)"
+        description: "div.dates-kics::text"
+        closing_date: "div.end-date::text"
+        opening_date: "div.start-date::text"
     robots_txt_obey: true
     category_default: "Innovación"
     custom_parser: false
-    # Note: EIT site uses Drupal; standard view-row card layout.
+    # Note: EIT uses a Drupal masonry view listing with teaser-title cards.
 
   # ── Development Banks & International Organizations ────────────────
 
