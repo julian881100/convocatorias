@@ -882,21 +882,19 @@ sources:
     country: "Internacional"
     fetcher: "http"
     pagination:
-      type: "query_param"
-      param: "page"
-      start: 1
+      type: "none"
     selectors:
-      container: "div.beca-item, article.beca-card, div.lista-becas div.item"
+      container: "article.post"
       fields:
-        title: "h3.titulo a::text, h2 a::text"
-        url: "h3.titulo a::attr(href), h2 a::attr(href)"
-        description: "p.descripcion::text, div.resumen p::text"
-        closing_date: "span.fecha-cierre::text, time.fecha::text"
+        title: "h3.entry-title a::text"
+        url: "h3.entry-title a::attr(href)"
+        description: "div.entry-excerpt p::text"
+        closing_date: "time::attr(datetime), span.deadline::text"
     robots_txt_obey: true
     category_default: "Investigación"
     custom_parser: false
-    # Note: CLACSO uses WordPress; card-based listing for scholarship
-    # and fellowship programs.
+    # Note: CLACSO uses WordPress; the listing renders article.post cards
+    # with h3.entry-title links.  The /becas/ page is a static overview.
 
   # ── International Organizations ──────────────────────────────────────
 
