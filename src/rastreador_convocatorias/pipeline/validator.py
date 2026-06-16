@@ -261,12 +261,16 @@ class VigencyValidator:
         closing_date = self._parse_date(record.closing_date) if record.closing_date else None
 
         if closing_date is not None:
-            if closing_date >= self.reference_date:
+            status = Status.vigente if closing_date >= self.reference_date else Status.vencida
+        else:
+            # No explicit closing date: use opening_date as a proxy.
+            # If the call has already opened (opening_date <= reference_date),
+            # treat it as currently open.  Otherwise it requires verification.
+            opening_date = self._parse_date(record.opening_date) if record.opening_date else None
+            if opening_date is not None and opening_date <= self.reference_date:
                 status = Status.vigente
             else:
-                status = Status.vencida
-        else:
-            status = Status.requires_verification
+                status = Status.requires_verification
 
         return ValidatedRecord(
             **record.model_dump(),

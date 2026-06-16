@@ -121,6 +121,30 @@ class TestVigencyValidator:
         # Latest deadline is 4 Nov 2026 → vigente
         assert result[0].status == Status.vigente
 
+    def test_opening_date_without_closing_date_is_vigente(
+        self, ref_date: datetime,
+    ) -> None:
+        """Record that has already opened and has no closing date → vigente."""
+        validator = VigencyValidator(reference_date=ref_date)
+        record = RawRecord(
+            title="Already opened",
+            opening_date="2026-01-15",
+        )
+        result = validator.validate([record])
+        assert result[0].status == Status.vigente
+
+    def test_future_opening_date_requires_verification(
+        self, ref_date: datetime,
+    ) -> None:
+        """Record that opens in the future → requires_verification."""
+        validator = VigencyValidator(reference_date=ref_date)
+        record = RawRecord(
+            title="Future opening",
+            opening_date="01/12/2026",
+        )
+        result = validator.validate([record])
+        assert result[0].status == Status.requires_verification
+
 
 class TestValidatorEdgeCases:
     """Edge cases that might trip up the parser."""
