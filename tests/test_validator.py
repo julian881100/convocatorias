@@ -100,6 +100,27 @@ class TestVigencyValidator:
         result = validator.validate([record])
         assert result[0].status == Status.vigente
 
+    def test_dot_separated_date_format(self, ref_date: datetime) -> None:
+        """DD.MM.YYYY format (EIC) is parsed correctly."""
+        validator = VigencyValidator(reference_date=ref_date)
+        record = RawRecord(
+            title="Test dots",
+            closing_date="8.07.2026",
+        )
+        result = validator.validate([record])
+        assert result[0].status == Status.vigente
+
+    def test_multiple_dates_use_latest(self, ref_date: datetime) -> None:
+        """Pipe-separated deadlines use the latest date (rolling deadlines)."""
+        validator = VigencyValidator(reference_date=ref_date)
+        record = RawRecord(
+            title="Test multiple",
+            closing_date="Deadline dates: 7.01.2026 | 4.03.2026 | 8.07.2026 | 4.11.2026",
+        )
+        result = validator.validate([record])
+        # Latest deadline is 4 Nov 2026 → vigente
+        assert result[0].status == Status.vigente
+
 
 class TestValidatorEdgeCases:
     """Edge cases that might trip up the parser."""

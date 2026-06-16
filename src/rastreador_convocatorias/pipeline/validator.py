@@ -43,6 +43,12 @@ _SPANISH_DATE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Patterns for numeric dates commonly found in international sources.
+# These are tried before dateutil because dateutil can mis-parse D.M.YYYY.
+_NUMERIC_DATE_RE = re.compile(
+    r"(\d{1,2})[\.\/\-](\d{1,2})[\.\/\-](\d{4})"
+)
+
 # ── Helpers ──────────────────────────────────────────────────────────────
 
 _TRUTHY_STRINGS = {"true", "1", "yes", "sí", "si"}
@@ -60,10 +66,9 @@ def _is_truthy(value: object) -> bool:
 def _parse_date_with_spanish(text: str) -> datetime | None:
     """Parse a date string that may contain Spanish month names.
 
-    Tries two strategies in order:
-
-    1. Direct ``python-dateutil`` parse with ``dayfirst=True``.
-    2. Regex-based Spanish month substitution followed by ``dayfirst=True``.
+    When multiple dates are present (e.g. ``"7.01.2026 | 4.03.2026 | ..."``),
+    the latest parseable date is returned.  This matches the semantics of
+    rolling deadlines: a call remains open until its final deadline passes.
 
     Parameters
     ----------
@@ -81,34 +86,73 @@ def _parse_date_with_spanish(text: str) -> datetime | None:
 
     cleaned = text.strip()
 
-    # Strategy 1: direct parse
-    try:
-        dt = parse_date(cleaned, dayfirst=True)
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=UTC)
-        return dt
-    except (ValueError, TypeError):
-        pass
+    # Split on common date separators (EIC uses "|", others use ",", ";", newlines).
+    parts = re.split(r"[|;,\n]+", cleaned)
 
-    # Strategy 2: replace Spanish month names
-    match = _SPANISH_DATE_RE.search(cleaned)
-    if match:
-        day = int(match.group(1))
-        month_name = match.group(2).lower()
-        year = int(match.group(3))
-        month = SPANISH_MONTHS.get(month_name)
-        if month:
+    parsed_dates: list[datetime] = []
+
+    for part in parts:
+        candidate = part.strip()
+        if not candidate:
+            continue
+
+        # Remove common prefixes/labels and trailing time zones.
+        candidate = re.sub(
+            r"(?i)(deadline dates?|closing dates?|deadline|fecha de cierre|cierre|vigencia|hasta el)\s*:?\s*",
+            "",
+            candidate,
+        )
+        candidate = re.sub(
+            r"\s*\d{1,2}\.\d{2}\s*-\s*[A-Z]{2,4}$", "", candidate.strip()
+        )
+        candidate = candidate.strip()
+        if not candidate:
+            continue
+
+        dt: datetime | None = None
+
+        # Strategy 1: explicit numeric D[./-]M[./-]YYYY (dayfirst)
+        match = _NUMERIC_DATE_RE.search(candidate)
+        if match:
+            day, month, year = int(match.group(1)), int(match.group(2)), int(match.group(3))
             try:
                 dt = datetime(year, month, day, tzinfo=UTC)
-                return dt
             except ValueError:
-                pass
+                dt = None
 
-    # Strategy 3: brute-force month name replacement
+        # Strategy 2: direct parse
+        if dt is None:
+            try:
+                dt = parse_date(candidate, dayfirst=True)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=UTC)
+            except (ValueError, TypeError):
+                dt = None
+
+        # Strategy 3: replace Spanish month names
+        if dt is None:
+            match = _SPANISH_DATE_RE.search(candidate)
+            if match:
+                day = int(match.group(1))
+                month_name = match.group(2).lower()
+                year = int(match.group(3))
+                month = SPANISH_MONTHS.get(month_name)
+                if month:
+                    try:
+                        dt = datetime(year, month, day, tzinfo=UTC)
+                    except ValueError:
+                        dt = None
+
+        if dt is not None:
+            parsed_dates.append(dt)
+
+    if parsed_dates:
+        return max(parsed_dates)
+
+    # Strategy 4: brute-force month name replacement on full text
     lower = cleaned.lower()
     for name, num in SPANISH_MONTHS.items():
         if name in lower:
-            # Replace "de {name} de" with "/{num}/" and try again
             patched = re.sub(
                 rf"\bde\s+{name}\s+de\b",
                 f"/{num}/",
@@ -122,7 +166,7 @@ def _parse_date_with_spanish(text: str) -> datetime | None:
                 return dt
             except (ValueError, TypeError):
                 pass
-            break  # Only try the first matched month
+            break
 
     logger.debug("Could not parse date text: %s", text)
     return None
