@@ -430,9 +430,9 @@ sources:
         official_body: "span.programme-name::text, div.programme::text"
     robots_txt_obey: true
     category_default: "Investigación"
-    custom_parser: false
+    custom_parser: true
     # Note: Horizon Europe portal is JS-heavy (Angular) — stealthy fetcher
-    # should handle it. Selectors are estimated from the topic-search view.
+    # + custom adapter parses the rendered DOM.
 
   - name: "European Innovation Council - Funding Opportunities"
     url: "https://eic.ec.europa.eu/eic-funding-opportunities_en"
@@ -474,7 +474,7 @@ sources:
         opening_date: "span.start-date::text"
     robots_txt_obey: true
     category_default: "Educación"
-    custom_parser: false
+    custom_parser: true
     # Note: Erasmus+ site is built on the EU's corporate Drupal; listing
     # cards with teaser text and deadline dates.
 
@@ -647,7 +647,7 @@ sources:
         funding_amount: "span.funding::text, div.funding-amount::text"
     robots_txt_obey: true
     category_default: "Becas"
-    custom_parser: false
+    custom_parser: true
     # Note: DAAD uses a custom CMS; DAAD Colombia country portal targets
     # Spanish-language scholarship offers for Colombian applicants.
 
@@ -708,7 +708,7 @@ sources:
         funding_amount: "span.prize::text, div.prize-amount::text"
     robots_txt_obey: true
     category_default: "Innovación"
-    custom_parser: false
+    custom_parser: true
     # Note: MIT Solve is a JS-heavy React app; dynamic fetcher with JS
     # rendering is required. Challenge cards are loaded via API.
 
